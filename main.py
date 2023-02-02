@@ -5,17 +5,37 @@ import rich
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, TimeElapsedColumn
 from app.app import SnapchatScrapper
 from app.helpers import NoStoriesFound, clear, banner, APIResponseError, UserNotFoundError
+import git
 
 
 def main():
     clear()
     print(banner())
 
+    """
+    To automatically pull the code from repo
+    """
+    rich.print(f"[[yellow bold]*[/]] Updating the tool ...")
+    try:
+        g = git.cmd.Git('./')
+        g.pull()
+        rich.print(f"[[green bold]✔[/]] The tool is up to date.")
+    except (Exception,):
+        rich.print(f"[[red bold]![/]] Failed to update the tool.")
+
+    """
+    Try to fetch users list from API then save them if, if failed, Try to fetch it locally from users.txt    
+    """
     rich.print(f"[[yellow bold]*[/]] Fetching users list from API ...")
     try:
         res = requests.get('https://dashboard.dflow.tech/api/acl/influencer/hander')
         users_list = res.json()['data']
         rich.print(f"[[green bold]✔[/]] Fetched a total of {len(users_list)} users.")
+
+        with open('users.txt', 'w') as file:
+            file.write('\n'.join(users_list))
+        file.close()
+
     except (Exception,):
         rich.print(f"[[red bold]![/]] Failed to Fetch users list from API.")
         rich.print(f"[[yellow bold]*[/]] Fetching users list from users.text file ...")
@@ -68,6 +88,4 @@ def main():
 
 
 if __name__ == "__main__":
-    while True:
-        main()
-        time.sleep(10)
+    main()
